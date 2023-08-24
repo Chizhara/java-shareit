@@ -1,12 +1,58 @@
 package ru.practicum.shareit.item;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.ItemDto;
 
-/**
- * TODO Sprint add-controllers.
- */
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.util.Collection;
+
+import static ru.practicum.shareit.item.dto.ItemMapper.toItem;
+import static ru.practicum.shareit.item.dto.ItemMapper.toItemDto;
+
+@Slf4j
 @RestController
 @RequestMapping("/items")
+@RequiredArgsConstructor
 public class ItemController {
+
+    private final ItemService itemService;
+
+    @GetMapping("/{itemId}")
+    public ItemDto getItem(@PathVariable Long itemId) {
+        log.info("Called method getItem of class ItemController with args: itemId = {};", itemId);
+        return toItemDto(itemService.getItem(itemId));
+    }
+
+    @GetMapping
+    public Collection<ItemDto> getItems(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
+        log.info("Called method getItem of class ItemController with args: userId = {};", userId);
+        return toItemDto(itemService.getItems(userId));
+    }
+
+    @GetMapping("/search")
+    public Collection<ItemDto> searchItems(@RequestParam(value = "text", defaultValue = "") String value) {
+        log.info("Called method searchItems of class ItemController with args: value = {};", value);
+        return toItemDto(itemService.searchItems(value));
+    }
+
+    @PostMapping
+    public ItemDto addItem(@RequestBody @Valid ItemDto itemDto,
+                           @RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
+        log.info("Called method addItem of class ItemController with args: itemDto = {}; userId = {};", itemDto, userId);
+        itemDto.setOwnerId(userId);
+        return toItemDto(itemService.addItem(toItem(itemDto), userId));
+    }
+
+    @PatchMapping("/{itemId}")
+    public ItemDto updateItem(@RequestBody ItemDto itemDto,
+                              @PathVariable Long itemId,
+                              @RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
+        log.info("Called method updateItem of class ItemController with args: itemDto = {};", itemDto);
+        itemDto.setId(itemId);
+        return toItemDto(itemService.updateItem(toItem(itemDto), userId));
+    }
+
 }
