@@ -3,14 +3,16 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemInfoDto;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
-import static ru.practicum.shareit.item.dto.ItemMapper.toItem;
-import static ru.practicum.shareit.item.dto.ItemMapper.toItemDto;
+import static ru.practicum.shareit.item.mapper.ItemMapper.*;
+import static ru.practicum.shareit.item.mapper.CommentMapper.*;
 
 @Slf4j
 @RestController
@@ -21,15 +23,16 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping("/{itemId}")
-    public ItemDto getItem(@PathVariable Long itemId) {
-        log.info("Called method getItem of class ItemController with args: itemId = {};", itemId);
-        return toItemDto(itemService.getItem(itemId));
+    public ItemInfoDto getItem(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId,
+                               @PathVariable Long itemId) {
+        log.info("Called method getItem of class ItemController with args: userId = {}; itemId = {};", userId, itemId);
+        return toItemInfoDto(itemService.getItemInfo(itemId, userId));
     }
 
     @GetMapping
-    public Collection<ItemDto> getItems(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
+    public Collection<ItemInfoDto> getItems(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
         log.info("Called method getItem of class ItemController with args: userId = {};", userId);
-        return toItemDto(itemService.getItems(userId));
+        return toItemInfoDto(itemService.getItemsInfo(userId));
     }
 
     @GetMapping("/search")
@@ -53,6 +56,15 @@ public class ItemController {
         log.info("Called method updateItem of class ItemController with args: itemDto = {};", itemDto);
         itemDto.setId(itemId);
         return toItemDto(itemService.updateItem(toItem(itemDto), userId));
+    }
+
+    @PostMapping({"/{itemId}/comment"})
+    public CommentDto addComment(@RequestBody @Valid CommentDto commentDto,
+                                 @PathVariable Long itemId,
+                                 @RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
+        log.info("Called method addComment of class ItemController with args: " +
+                "itemId = {} ;commentDto = {}; userId = {};", itemId, commentDto, userId);
+        return toCommentDto(itemService.addComment(toComment(commentDto), userId, itemId));
     }
 
 }

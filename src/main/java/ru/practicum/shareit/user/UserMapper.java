@@ -1,14 +1,14 @@
-package ru.practicum.shareit.user.dto;
+package ru.practicum.shareit.user;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Component
+@UtilityClass
 public class UserMapper {
     public static UserDto toUserDto(User user) {
         log.trace("Called method toUserDto of class UserMapper with args: user = {};", user);

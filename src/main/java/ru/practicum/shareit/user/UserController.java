@@ -9,8 +9,8 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
-import static ru.practicum.shareit.user.dto.UserMapper.toUser;
-import static ru.practicum.shareit.user.dto.UserMapper.toUserDto;
+import static ru.practicum.shareit.user.UserMapper.toUser;
+import static ru.practicum.shareit.user.UserMapper.toUserDto;
 
 @Slf4j
 @RestController

@@ -3,6 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.NotFoundException;
 
 import java.util.Collection;
@@ -22,26 +23,44 @@ public class UserService {
 
     public Collection<User> getUsers() {
         log.info("Called method getUsers of class UserService with args: ;");
-        return userRepository.getAll();
+        return userRepository.findAll();
     }
 
+    @Transactional
     public User addUser(User user) {
         log.info("Called method addUser of class UserService with args: user = {};", user);
-        return userRepository.save(user)
-                .orElseThrow(() -> new NotFoundException(user));
+        return userRepository.save(user);
     }
 
+    @Transactional
     public User updateUser(User user, long userId) {
         log.info("Called method updateUser of class UserService with args: userId = {}, user = {};", userId, user);
-        user.setId(userId);
-        return userRepository.update(user)
-                .orElseThrow(() -> new NotFoundException(userId));
+        User updatedUser = getUser(userId);
+        updateUserFields(updatedUser, user);
+        return userRepository.save(updatedUser);
     }
 
+    @Transactional
     public User deleteUser(long userId) {
         log.info("Called method deleteUser of class UserService with args: userId = {};", userId);
-        return userRepository.delete(userId)
-                .orElseThrow(() -> new NotFoundException(userId));
+        User user = getUser(userId);
+        userRepository.deleteById(userId);
+        return user;
     }
 
+    public boolean isContainingUserWithId(long userId) {
+        log.info("Called method isContainsUserWithId of class UserService with args: userId = {};", userId);
+        return userRepository.existsById(userId);
+    }
+
+    private void updateUserFields(User updatedUser, User userData) {
+        log.trace("Called method updateUserFields of class UserService with args: " +
+                "updatedUser = {}; userData = {};", updatedUser, userData);
+        if (userData.getEmail() != null) {
+            updatedUser.setEmail(userData.getEmail());
+        }
+        if (userData.getName() != null) {
+            updatedUser.setName(userData.getName());
+        }
+    }
 }
