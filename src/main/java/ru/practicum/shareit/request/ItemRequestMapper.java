@@ -1,25 +1,64 @@
 package ru.practicum.shareit.request;
 
-import ru.practicum.shareit.request.ItemRequest;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
-import ru.practicum.shareit.user.UserMapper;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.stream.Collectors;
+
+@Slf4j
+@UtilityClass
 public class ItemRequestMapper {
-    public static ItemRequestDto toUserDto(ItemRequest itemRequest) {
+
+    public static ItemRequestDto toItemRequestDto(ItemRequest itemRequest) {
+        log.trace("Called method toItemRequestDto of class ItemRequestMapper " +
+                "with args: itemRequest = {};", itemRequest);
         return ItemRequestDto.builder()
                 .id(itemRequest.getId())
                 .description(itemRequest.getDescription())
-                .requester(UserMapper.toUserDto(itemRequest.getRequester()))
                 .created(itemRequest.getCreated())
+                .items(toItemDto(itemRequest.getItems(), itemRequest.getId()))
                 .build();
     }
 
-    public static ItemRequest toUser(ItemRequestDto itemRequest) {
+    public static Collection<ItemRequestDto> toItemRequestDto(Collection<ItemRequest> itemRequests) {
+        log.trace("Called method toItemRequestDto of class ItemRequestMapper " +
+                "with args: itemRequests = {};", itemRequests);
+        return itemRequests.stream().map(ItemRequestMapper::toItemRequestDto).collect(Collectors.toList());
+    }
+
+    public static ItemRequest toItemRequest(ItemRequestDto itemRequestDto) {
+        log.trace("Called method toItemRequest of class ItemRequestMapper " +
+                "with args: itemRequestDto = {};", itemRequestDto);
         return ItemRequest.builder()
-                .id(itemRequest.getId())
-                .description(itemRequest.getDescription())
-                .requester(UserMapper.toUser(itemRequest.getRequester()))
-                .created(itemRequest.getCreated())
+                .description(itemRequestDto.getDescription())
                 .build();
     }
+
+    private static ItemRequestDto.ItemDto toItemDto(Item item, Long itemRequestId) {
+        log.trace("Called method toItemDto of class ItemRequestMapper " +
+                "with args: item = {};", item);
+        return ItemRequestDto.ItemDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .requestId(itemRequestId)
+                .build();
+    }
+
+    private static Collection<ItemRequestDto.ItemDto> toItemDto(Collection<Item> items, Long itemRequestId) {
+        log.trace("Called method toItemDto of class ItemRequestMapper " +
+                "with args: items = {};", items);
+        if (items != null) {
+            return items.stream().map(Item -> toItemDto(Item, itemRequestId)).collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
+        }
+
+    }
+
 }

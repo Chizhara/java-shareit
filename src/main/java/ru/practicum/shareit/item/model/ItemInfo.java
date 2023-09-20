@@ -9,12 +9,16 @@ import java.util.Collection;
 @Builder
 @Getter
 @Setter
+@EqualsAndHashCode
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 public class ItemInfo {
+
     private Item item;
     private Booking lastBooking;
     private Booking nextBooking;
     @Builder.Default
     private Collection<Comment> comments = new ArrayList<>();
+
 }

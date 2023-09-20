@@ -2,8 +2,10 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.PageableGenerator;
 import ru.practicum.shareit.exception.AlreadyChangedException;
 import ru.practicum.shareit.exception.NotAvailableException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -25,22 +27,23 @@ public class BookingService {
     public Booking getBooking(long bookingId, long userId) {
         log.info("Called method getBooking of class BookingService with args: " +
                 "bookingId = {}, userId = {};", bookingId, userId);
+        userService.validateUserExistById(userId);
         return bookingRepository.findById(bookingId, userId)
                 .orElseThrow(() -> new NotFoundException(bookingId));
     }
 
-    public List<Booking> getBookingsByBookerIdAndSate(long bookerId, State state) {
+    public List<Booking> getBookingsByBookerIdAndSate(long bookerId, State state, int from, int size) {
         log.info("Called method getBookingsByBookerIdAndSate of class BookingService with args: " +
                 "bookerId = {}, state = {};", bookerId, state);
-        validateUserIsExists(bookerId);
-        return getBookingsByBookerIdSateResolver(bookerId, state);
+        userService.validateUserExistById(bookerId);
+        return getBookingsByBookerIdSateResolver(bookerId, state, PageableGenerator.getPageable(from, size));
     }
 
-    public List<Booking> getBookingsByOwnerIdAndSate(long ownerId, State state) {
+    public List<Booking> getBookingsByOwnerIdAndSate(long ownerId, State state, int from, int size) {
         log.info("Called method getBookingsByOwnerIdAndSate of class BookingService with args: " +
                 "ownerId = {}, state = {};", ownerId, state);
-        validateUserIsExists(ownerId);
-        return getBookingsByOwnerIdSateResolver(ownerId, state);
+        userService.validateUserExistById(ownerId);
+        return getBookingsByOwnerIdSateResolver(ownerId, state, PageableGenerator.getPageable(from, size));
     }
 
     @Transactional
@@ -67,42 +70,49 @@ public class BookingService {
         return bookingRepository.save(booking);
     }
 
-    private List<Booking> getBookingsByBookerIdSateResolver(long bookerId, State state) {
+    private List<Booking> getBookingsByBookerIdSateResolver(long bookerId, State state, Pageable pageable) {
         switch (state) {
             case ALL:
-                return bookingRepository.getAllByBookerIdOrderByStartDesc(bookerId);
+                return bookingRepository.getAllByBookerIdOrderByStartDesc(bookerId, pageable);
             case CURRENT:
                 return bookingRepository
-                        .getAllByBookerIdCurrentAndStartAndEndBetweenOrderByStartDesc(bookerId, LocalDateTime.now());
+                        .getAllByBookerIdCurrentAndBetweenTimeOrderByStartDesc(bookerId, LocalDateTime.now(), pageable);
             case PAST:
-                return bookingRepository.getAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository
+                        .getAllByBookerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now(), pageable);
             case FUTURE:
-                return bookingRepository.getAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository
+                        .getAllByBookerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now(), pageable);
             case WAITING:
-                return bookingRepository.getAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                return bookingRepository
+                        .getAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING, pageable);
             case REJECTED:
-                return bookingRepository.getAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                return bookingRepository
+                        .getAllByBookerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED, pageable);
             default:
                 return List.of();
         }
     }
 
-    private List<Booking> getBookingsByOwnerIdSateResolver(long bookerId, State state) {
+    private List<Booking> getBookingsByOwnerIdSateResolver(long bookerId, State state, Pageable pageable) {
         switch (state) {
             case ALL:
-                return bookingRepository.getAllByItemOwnerIdOrderByStartDesc(bookerId);
+                return bookingRepository.getAllByItemOwnerIdOrderByStartDesc(bookerId, pageable);
             case CURRENT:
                 return bookingRepository
-                        .getAllByItemOwnerIdCurrentAndStartAndEndBetweenOrderByStartDesc(bookerId, LocalDateTime.now());
+                        .getAllByOwnerIdCurrentAndBetweenTimeOrderByStartDesc(bookerId, LocalDateTime.now(), pageable);
             case PAST:
-                return bookingRepository.getAllByItemOwnerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now());
+                return bookingRepository
+                        .getAllByItemOwnerIdAndEndBeforeOrderByStartDesc(bookerId, LocalDateTime.now(), pageable);
             case FUTURE:
                 return bookingRepository
-                        .getAllByItemOwnerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now());
+                        .getAllByItemOwnerIdAndStartAfterOrderByStartDesc(bookerId, LocalDateTime.now(), pageable);
             case WAITING:
-                return bookingRepository.getAllByItemOwnerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING);
+                return bookingRepository
+                        .getAllByItemOwnerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.WAITING, pageable);
             case REJECTED:
-                return bookingRepository.getAllByItemOwnerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED);
+                return bookingRepository
+                        .getAllByItemOwnerIdAndStatusOrderByStartDesc(bookerId, BookingStatus.REJECTED, pageable);
             default:
                 return List.of();
         }
@@ -125,12 +135,6 @@ public class BookingService {
         }
         if (!booking.getItem().getAvailable()) {
             throw new NotAvailableException(booking.getItem());
-        }
-    }
-
-    private void validateUserIsExists(long userId) {
-        if (!userService.isContainingUserWithId(userId)) {
-            throw new NotFoundException(userId);
         }
     }
 

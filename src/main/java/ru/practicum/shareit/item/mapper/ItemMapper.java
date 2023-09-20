@@ -22,7 +22,7 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .ownerId(item.getOwner().getId())
+                .requestId(item.getRequest() == null ? null : item.getRequest().getId())
                 .build();
     }
 
@@ -59,11 +59,6 @@ public class ItemMapper {
                 .description(itemDto.getDescription())
                 .available(itemDto.getAvailable())
                 .build();
-    }
-
-    public static Collection<Item> toItem(Collection<ItemDto> itemDtos) {
-        log.trace("Called method toItem of class ItemMapper with args: itemDtos = {};", itemDtos);
-        return itemDtos.stream().map(ItemMapper::toItem).collect(Collectors.toList());
     }
 
     private static ItemInfoDto.BookingDto toItemInfoBookingDto(Booking booking) {

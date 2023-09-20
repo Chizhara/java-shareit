@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.PageableGenerator;
 import ru.practicum.shareit.booking.Booking;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
@@ -14,6 +15,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemInfo;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.ItemRequestService;
 import ru.practicum.shareit.user.UserService;
 
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestService itemRequestService;
 
     public ItemInfo getItemInfo(long itemId, long userId) {
         log.info("Called method getItem of class ItemService with args: itemId = {};", itemId);
@@ -46,18 +49,19 @@ public class ItemService {
                 .orElseThrow(() -> new NotFoundException(itemId));
     }
 
-    public Collection<ItemInfo> getItemsInfo(long ownerId) {
+    public Collection<ItemInfo> getItemsInfo(long ownerId, int from, int size) {
         log.info("Called method getItems of class ItemService with args: ownerId = {};", ownerId);
-        Collection<Item> items = itemRepository.findAllByOwnerId(ownerId);
+        Collection<Item> items = itemRepository.findAllByOwnerId(ownerId, PageableGenerator.getPageable(from, size));
         return items.stream()
                 .map(this::generateItemInfo)
                 .collect(Collectors.toList());
     }
 
     @Transactional
-    public Item addItem(Item item, long userId) {
+    public Item addItem(Item item, Long requestId, long userId) {
         log.info("Called method addItem of class ItemService with args: item = {};", item);
         item.setOwner(userService.getUser(userId));
+        initItemRequestOfItem(item, requestId);
         return itemRepository.save(item);
     }
 
@@ -70,12 +74,12 @@ public class ItemService {
         return itemRepository.save(itemUpdated);
     }
 
-    public Collection<Item> searchItems(String searchedValue) {
+    public Collection<Item> searchItems(String searchedValue, int from, int size) {
         log.info("Called method searchItem of class ItemService with args: searchedValue = {};", searchedValue);
         if (searchedValue.isBlank()) {
             return List.of();
         }
-        return itemRepository.findItemsByText(searchedValue);
+        return itemRepository.findItemsByText(searchedValue, PageableGenerator.getPageable(from, size));
     }
 
     @Transactional
@@ -133,6 +137,12 @@ public class ItemService {
         if (bookingRepository.findAllByItemIdAndBookerIdAndStatusAndStartBefore(itemId, authorId,
                 BookingStatus.APPROVED, LocalDateTime.now()).isEmpty()) {
             throw new NotAvailableException("Отсутствуют заказы для " + itemId + " от пользователя " + authorId);
+        }
+    }
+
+    private void initItemRequestOfItem(Item item, Long requestId) {
+        if (requestId != null) {
+            item.setRequest(itemRequestService.getItemRequest(requestId));
         }
     }
 
