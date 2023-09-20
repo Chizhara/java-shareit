@@ -9,6 +9,8 @@ import ru.practicum.shareit.booking.dto.BookingInfoDto;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 
 import java.util.Collection;
 
@@ -36,19 +38,23 @@ public class BookingController {
     @GetMapping
     public Collection<BookingInfoDto> getBookingsByBooker(
             @RequestHeader("X-Sharer-User-Id") @NotNull Long bookerId,
-            @RequestParam(value = "state", defaultValue = "ALL") State state) {
+            @RequestParam(value = "state", defaultValue = "ALL") State state,
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "20") @Positive Integer size) {
         log.info("Called method getBookingsByBooker of class BookingController with args: " +
-                "bookerId = {}; state = {};", bookerId, state);
-        return toBookingInfoDto(bookingService.getBookingsByBookerIdAndSate(bookerId, state));
+                "bookerId = {}; state = {}, from = {}, size = {};", bookerId, state, from, size);
+        return toBookingInfoDto(bookingService.getBookingsByBookerIdAndSate(bookerId, state, from, size));
     }
 
     @GetMapping("/owner")
     public Collection<BookingInfoDto> getBookingsByOwner(
             @RequestHeader("X-Sharer-User-Id") @NotNull Long bookerId,
-            @RequestParam(value = "state", defaultValue = "ALL") State state) {
+            @RequestParam(value = "state", defaultValue = "ALL") State state,
+            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+            @RequestParam(defaultValue = "20") @Positive Integer size) {
         log.info("Called method getBookingsByOwner of class BookingController with args: " +
-                "bookerId = {}; state = {};", bookerId, state);
-        return toBookingInfoDto(bookingService.getBookingsByOwnerIdAndSate(bookerId, state));
+                "bookerId = {}; state = {}, from = {}, size = {};", bookerId, state, from, size);
+        return toBookingInfoDto(bookingService.getBookingsByOwnerIdAndSate(bookerId, state, from, size));
     }
 
     @PostMapping
