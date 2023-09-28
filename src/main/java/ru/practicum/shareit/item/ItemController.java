@@ -9,6 +9,8 @@ import ru.practicum.shareit.item.dto.ItemInfoDto;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.Collection;
 
 import static ru.practicum.shareit.item.mapper.ItemMapper.*;
@@ -25,28 +27,35 @@ public class ItemController {
     @GetMapping("/{itemId}")
     public ItemInfoDto getItem(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId,
                                @PathVariable Long itemId) {
-        log.info("Called method getItem of class ItemController with args: userId = {}; itemId = {};", userId, itemId);
+        log.info("Called method getItem of class ItemController " +
+                "with args: userId = {}; itemId = {};", userId, itemId);
         return toItemInfoDto(itemService.getItemInfo(itemId, userId));
     }
 
     @GetMapping
-    public Collection<ItemInfoDto> getItems(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
-        log.info("Called method getItem of class ItemController with args: userId = {};", userId);
-        return toItemInfoDto(itemService.getItemsInfo(userId));
+    public Collection<ItemInfoDto> getItems(@RequestHeader("X-Sharer-User-Id") @NotNull Long userId,
+                                            @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                            @RequestParam(defaultValue = "20") @Positive Integer size) {
+        log.info("Called method getItem of class ItemController " +
+                "with args: userId = {}, from = {}, size = {};", userId, from, size);
+        return toItemInfoDto(itemService.getItemsInfo(userId, from, size));
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> searchItems(@RequestParam(value = "text", defaultValue = "") String value) {
-        log.info("Called method searchItems of class ItemController with args: value = {};", value);
-        return toItemDto(itemService.searchItems(value));
+    public Collection<ItemDto> searchItems(@RequestParam(value = "text", defaultValue = "") String value,
+                                           @RequestParam(defaultValue = "0") @PositiveOrZero Integer from,
+                                           @RequestParam(defaultValue = "20") @Positive Integer size) {
+        log.info("Called method searchItems of class ItemController " +
+                "with args: value = {}, from = {}, size = {};", value, from, size);
+        return toItemDto(itemService.searchItems(value, from, size));
     }
 
     @PostMapping
     public ItemDto addItem(@RequestBody @Valid ItemDto itemDto,
                            @RequestHeader("X-Sharer-User-Id") @NotNull Long userId) {
-        log.info("Called method addItem of class ItemController with args: itemDto = {}; userId = {};", itemDto, userId);
-        itemDto.setOwnerId(userId);
-        return toItemDto(itemService.addItem(toItem(itemDto), userId));
+        log.info("Called method addItem of class ItemController " +
+                "with args: itemDto = {}, userId = {};", itemDto, userId);
+        return toItemDto(itemService.addItem(toItem(itemDto), itemDto.getRequestId(), userId));
     }
 
     @PatchMapping("/{itemId}")

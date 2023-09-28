@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @UtilityClass
 public class UserMapper {
+
     public static UserDto toUserDto(User user) {
         log.trace("Called method toUserDto of class UserMapper with args: user = {};", user);
         return UserDto.builder()
@@ -33,8 +34,4 @@ public class UserMapper {
                 .build();
     }
 
-    public static Collection<User> toUser(Collection<UserDto> users) {
-        log.trace("Called method toUser of class UserMapper with args: users = {};", users);
-        return users.stream().map(UserMapper::toUser).collect(Collectors.toList());
-    }
 }

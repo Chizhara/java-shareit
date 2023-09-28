@@ -48,9 +48,11 @@ public class UserService {
         return user;
     }
 
-    public boolean isContainingUserWithId(long userId) {
-        log.info("Called method isContainsUserWithId of class UserService with args: userId = {};", userId);
-        return userRepository.existsById(userId);
+    public void validateUserExistById(long userId) {
+        log.info("Called method validateUserById of class UserService with args: userId = {};", userId);
+        if (!userRepository.existsById(userId)) {
+            throw new NotFoundException(userId);
+        }
     }
 
     private void updateUserFields(User updatedUser, User userData) {

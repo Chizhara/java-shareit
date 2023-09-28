@@ -7,7 +7,6 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserMapper;
-
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -30,16 +29,6 @@ public class BookerMapper {
     public static Collection<BookingInfoDto> toBookingInfoDto(Collection<Booking> bookings) {
         log.trace("Called method toBookingDto of class BookerMapper with args: bookings = {};", bookings);
         return bookings.stream().map(BookerMapper::toBookingInfoDto).collect(Collectors.toList());
-    }
-
-    public static Booking toBooking(BookingInfoDto bookingInfoDto) {
-        log.trace("Called method toBooking of class BookerMapper with args: bookingDto = {};", bookingInfoDto);
-        return Booking.builder()
-                .id(bookingInfoDto.getId())
-                .start(bookingInfoDto.getStart())
-                .end(bookingInfoDto.getEnd())
-                .status(bookingInfoDto.getStatus())
-                .build();
     }
 
     public static Booking toBooking(BookingDto bookingDto) {
