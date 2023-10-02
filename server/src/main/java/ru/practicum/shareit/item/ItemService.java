@@ -51,7 +51,7 @@ public class ItemService {
 
     public Collection<ItemInfo> getItemsInfo(long ownerId, int from, int size) {
         log.info("Called method getItems of class ItemService with args: ownerId = {};", ownerId);
-        Collection<Item> items = itemRepository.findAllByOwnerId(ownerId, PageableGenerator.getPageable(from, size));
+        Collection<Item> items = itemRepository.findAllByOwnerIdOrderById(ownerId, PageableGenerator.getPageable(from, size));
         return items.stream()
                 .map(this::generateItemInfo)
                 .collect(Collectors.toList());
