@@ -22,8 +22,9 @@ REST API for interaction.
 - lombok
 - JUnit, Mockito, H2
 
-### ER-diagramm:
+### ER-diagram:
 ![ER scheme](ER-scheme.png "ER scheme")
+
 
 
 
